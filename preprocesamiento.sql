@@ -1,42 +1,48 @@
 -------------------- Preprocesamiento --------------------
 
 ----- Crear tabla con usuarios que han calificado más de 50 películas
-DROP table if exists usuarios_sel;
+DROP TABLE IF EXISTS usuarios_sel;
 
-CREATE table usuarias_sel as 
-
-    SELECT "userId", COUNT(*) as count_rating
-    FROM ratings
-    GROUP BY "userID"
-    HAVING count_rating >50
-    ORDER BY count_rating DESC;
-
+CREATE TABLE usuarios_sel AS 
+SELECT "userID", COUNT(*) AS count_rating
+FROM ratings
+GROUP BY "userID"
+HAVING count_rating > 50
+ORDER BY count_rating DESC;
 
 ------ Crear tabla con películas que han sido calificados por más de 50 usuarios
+DROP TABLE IF EXISTS movies_sel;
 
-DROP table if exists movies_sel;
+CREATE TABLE movies_sel AS
+SELECT m.movieID, 
+       COUNT(r.movieID) AS count_rating
+FROM movies m
+LEFT JOIN ratings r ON m.movieID = r.movieID
+GROUP BY m.movieID, m.title
+HAVING count_rating > 50
+ORDER BY count_rating DESC;
 
-CREATE table movies_sel as
-    SELECT m.movieID, m.title, COUNT(r.movieID) as count_rating
-    FROM movies m
-    LEFT JOIN ratings r ON m.movieID = r.movieID
-    GROUP BY count_rating
-    HAVING count_rating > 50
-    ORDER BY count_rating DESC;
+------- Crear tabla filtradas de películas, usuarios y calificaciones
+DROP TABLE IF EXISTS ratings_final;
 
+CREATE TABLE ratings_final AS
+SELECT r.userID, r.movieID, r.rating
+FROM ratings r
+INNER JOIN movies_sel m ON r.movieID = m.movieID
+INNER JOIN usuarios_sel u ON u.userID = r.userID;
 
--------crear tablas filtradas de películas, usuarios y calificaciones ---
-DROP table if exists ratings_final;
+------- Crear tabla de películas finales
+DROP TABLE IF EXISTS movie_final;
 
-CREATE table ratings_final as
-    SELECT r.userID, r.movieID, r.ratings
-    FROM ratings r
-    INNER JOIN movies_sel m ON r.movieID = m.movieID
-    INNER JOIN usuarias_sel u ON u.userID = r.userID
+CREATE TABLE movie_final AS
+SELECT a.movieID, a.title, a.genres
+FROM movies a
+INNER JOIN movies_sel b ON a.movieID = b.movieID;
 
+----- Crear tabla completa
+DROP TABLE IF EXISTS full_ratings;
 
-------- Crear tabla de usuarios finales
-DROP table if exists users_final;
-
-CREATE table users_final as
-    SELECT 
+CREATE TABLE full_ratings AS
+SELECT r.*, m.title, m.genres
+FROM ratings_final r
+INNER JOIN movie_final m ON r.movieID = m.movieID;
