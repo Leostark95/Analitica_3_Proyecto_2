@@ -7,7 +7,7 @@ CREATE TABLE usuarios_sel AS
 SELECT "userID", COUNT(*) AS count_rating
 FROM ratings
 GROUP BY "userID"
-HAVING count_rating > 100 and count_rating<= 1500
+HAVING count_rating > 50 and count_rating<= 1500
 ORDER BY count_rating DESC;
 
 ------ Crear tabla con películas que han sido calificados por más de 50 usuarios
@@ -19,7 +19,7 @@ SELECT m.movieID,
 FROM movies m
 LEFT JOIN ratings r ON m.movieID = r.movieID
 GROUP BY m.movieID, m.title
-HAVING count_rating > 100
+HAVING count_rating > 50
 ORDER BY count_rating DESC;
 
 ------- Crear tabla filtradas de películas, usuarios y calificaciones
