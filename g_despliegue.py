@@ -13,6 +13,19 @@ from sklearn import neighbors
 
 ### Función para procesar datos
 def preprocesar():
+    
+    """ 
+    Esta función tiene como objetivo procesar y transformar datos de movies y ratings almacenados en una base de datos.
+    La principal función de ella es separar el año del titulo y realizar la duminización de los géneros.
+    
+    La función devuelve:
+    - `movie_dum`: Un dataframe que contiene la información de las movies con columnas dummizadas para los géneros y la columna `year_sc` escalada.
+    - `movies`: El dataframe original de movies con el año separado.
+    - `conn`: La conexión a la base de datos.
+    - `cur`: El cursor de la base de datos para realizar futuras consultas.
+
+    Esta función es esencial para preparar los datos antes de realizar las recomendaciones a los usuarios em base a las películas y sus calificaciones.
+    """
 
     #### conectar_base_de_Datos#################
     conn=sql.connect('data/db_movies')
@@ -22,7 +35,6 @@ def preprocesar():
     ######## convertir datos crudos a bases filtradas por usuarios que tengan cierto número de calificaciones
     fn.ejecutar_sql('preprocesamiento.sql', cur)
 
-    
     ##### llevar datos que cambian constantemente a python ######
     movies=pd.read_sql('select * from movie_final', conn )
     ratings=pd.read_sql('select * from ratings_final', conn)
@@ -50,9 +62,18 @@ def preprocesar():
 ###############Basado en contenido todo lo visto por el usuario Knn#############################
 def recomendar(user_id):
     
+    """
+    Esta función tiene como objetivo realizar las recomendaciones de las películas por medio de un
+    algorítmo KNN, para ello tiene como argumento el user_id que recibe un id de un usuario y un entero
+    k para conocer la cantidad de películas a recomendar.
+    Este modelo tiene en cuenta las películas vistas por el usuario y las elimina para recomendar únicamente
+    películas que no haya visto.
+    
+    La función devuelve las k películas recomendadas.
+    """
     movie_dum,movies, conn, cur = preprocesar()
     
-    ratings=pd.read_sql('select * from ratings_final where userID = 1' ,conn)
+    ratings=pd.read_sql('select * from ratings_final WHERE userId=:user',conn, params={'user':user_id})
     l_movie_r=ratings['movieId'].to_numpy()
     movie_dum[['movieId','title']]=movies[['movieId','title']]
     movie_r=movie_dum[movie_dum['movieId'].isin(l_movie_r)]
@@ -76,6 +97,13 @@ def recomendar(user_id):
 ##### Generar recomendaciones para usuario lista de usuarios ####
 ##### No se hace para todos porque es muy pesado #############
 def main(list_user):
+    """
+    Esta función tiene como objetivo generar recomendaciones de películas para una lista de usuarios. Para ello, 
+    recibe como argumento list_user, que es una lista de id de usuarios. La función itera sobre cada usuario en la lista, 
+    llama a la función recomendar para obtener las recomendaciones de películas y las almacena
+    en un dataframe. Luego, guarda todas las recomendaciones en dos formatos: un archivo Excel y un archivo CSV, 
+    ubicándolos en el directorio salidas/reco.
+    """
     
     recomendaciones_todos=pd.DataFrame()
     for userID in list_user:
@@ -95,6 +123,8 @@ def main(list_user):
 
 
 if __name__=="__main__":
-    list_user=[1,4,6 ]
+    list_user=[504, 486, 608 ]
     main(list_user)
     
+import sys
+sys.executable
